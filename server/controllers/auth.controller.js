@@ -1,11 +1,114 @@
-const register = (req, res) => {
+import User from "../model/userModel.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+
+const register = async (req, res) => {
   try {
-  } catch (error) {}
+    const { name, username, email, phone, password } = req.body;
+
+    // ✅ validation
+    if (!name || !username || !email || !phone || !password) {
+      return res.status(400).json({ message: "All Fields Required." });
+    }
+
+    // ✅ Check existing user
+    const existingUser = await User.findOne({
+      $or: [{ email }, { phone }, { username }],
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: "User already exists with email, phone, or username",
+      });
+    }
+
+    // ✅ Password Hash
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // ✅ Referral code generate
+    const referralCode = username + Math.floor(1000 + Math.random() * 9000);
+
+    const lowerCaseEmail = email.toLowerCase();
+
+    // ✅ Create user
+    const user = await User.create({
+      name,
+      username,
+      email: lowerCaseEmail,
+      phone,
+      password: hashedPassword,
+      referralCode,
+    });
+
+    return res.status(201).json({
+      message: "User registered successfully",
+      user,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Server Error",
+    });
+  }
 };
 
-const login = (req, res) => {
+const login = async (req, res) => {
   try {
-  } catch (error) {}
+    const { identifier, password } = req.body;
+    // identifier = email OR phone OR username
+
+    // ✅ validation
+    if (!identifier || !password) {
+      return res.status(400).json({ message: "All fields required" });
+    }
+
+    // ✅ Find user (email / phone / username)
+    const user = await User.findOne({
+      $or: [
+        { email: identifier.toLowerCase() },
+        { phone: identifier },
+        { username: identifier },
+      ],
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    // ❌ Blocked check
+    if (user.isBlocked) {
+      return res.status(403).json({ message: "Account is blocked" });
+    }
+
+    // ✅ Password match
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    // ✅ JWT Token generate
+    const token = jwt.sign(
+      {
+        id: user._id,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
+    );
+
+    // 🔐 Password remove from response
+    user.password = undefined;
+
+    return res.status(200).json({
+      message: "Login successful",
+      token,
+      user,
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server Error" });
+  }
 };
 
 export default {

@@ -3,14 +3,21 @@ import dotenv from "dotenv";
 dotenv.config();
 import cors from "cors";
 import authRouter from "./routes/auth.route.js";
+import connectDB from "./config/db.js";
 
 const app = express();
+connectDB();
 
 const port = 3000;
 
 // middleware
 app.use(express.json());
-app.use(cors());
+app.use(
+  cors({
+    origin: "*",
+    credentials: true,
+  }),
+);
 
 // routes
 app.get("/", (req, res) => {
