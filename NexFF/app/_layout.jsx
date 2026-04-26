@@ -9,7 +9,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setUser } from "../src/redux/slices/userSlice";
 import { SafeAreaProvider } from "react-native-safe-area-context"; // ✅ IMPORTANT
 
-export const API = "http://192.168.239.227:3000/api";
+// export const API = "http://192.168.239.227:3000/api";
+export const API = "https://nexff.onrender.com/api";
 
 // 🔥 Outer Component
 export default function RootLayout() {
