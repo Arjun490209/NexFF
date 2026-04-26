@@ -5,7 +5,7 @@ import { Ionicons } from "@expo/vector-icons";
 import defaultAvatar from "../../assets/images/avatar.png";
 
 const Header = () => {
-  const user = useSelector((state) => state.user.user);
+  const user = useSelector((state) => state?.user?.user);
 
   const avatarSource =
     user?.avatar && user.avatar.trim() !== "" && user.avatar.startsWith("http")
@@ -13,39 +13,76 @@ const Header = () => {
       : defaultAvatar;
 
   return (
-    <View className="pt-6 pb-3 px-4 bg-black flex-row items-center justify-between border-b border-gray-800">
+    <View
+      style={{
+        height: 65,
+        backgroundColor: "black",
+        paddingHorizontal: 16,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        borderBottomWidth: 1,
+        borderBottomColor: "#1f2937",
+      }}
+    >
       {/* LEFT */}
-      <TouchableOpacity activeOpacity={0.8}>
-        <View className="relative">
-          <Image
-            source={avatarSource}
-            className="h-11 w-11 rounded-full border-2 border-yellow-400"
-          />
-          <View className="absolute bottom-0 right-0 h-3 w-3 bg-green-500 rounded-full border border-black" />
-        </View>
+      <TouchableOpacity>
+        <Image
+          source={avatarSource}
+          style={{
+            height: 44,
+            width: 44,
+            borderRadius: 22,
+            borderWidth: 2,
+            borderColor: "#facc15",
+          }}
+          resizeMode="cover"
+        />
       </TouchableOpacity>
 
       {/* CENTER */}
-      <View className="items-center">
-        <Text className="text-yellow-400 text-lg font-extrabold tracking-[2px]">
+      <View style={{ alignItems: "center" }}>
+        <Text style={{ color: "#facc15", fontWeight: "bold", fontSize: 18 }}>
           NexFF
         </Text>
-        <Text className="text-[9px] text-gray-500 -mt-1">Tournament Arena</Text>
+        <Text style={{ color: "#6b7280", fontSize: 10 }}>Tournament Arena</Text>
       </View>
 
       {/* RIGHT */}
-      <TouchableOpacity
-        activeOpacity={0.85}
-        className="flex-row items-center bg-yellow-400 px-3 py-2 rounded-full"
-      >
-        <Ionicons name="wallet" size={14} color="black" />
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        {/* 🔔 */}
+        <TouchableOpacity
+          style={{
+            backgroundColor: "#1f2937",
+            padding: 8,
+            borderRadius: 20,
+          }}
+        >
+          <Ionicons name="notifications" size={18} color="#facc15" />
+        </TouchableOpacity>
 
-        <Text className="text-black font-bold text-xs mx-1">
-          ₹{user?.walletBalance?.toFixed(2) || "0.00"}
-        </Text>
+        {/* 💰 */}
+        <TouchableOpacity
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: "#facc15",
+            paddingHorizontal: 10,
+            paddingVertical: 6,
+            borderRadius: 20,
+          }}
+        >
+          <Ionicons name="wallet" size={14} color="black" />
 
-        <Ionicons name="add" size={16} color="black" />
-      </TouchableOpacity>
+          <Text
+            style={{ color: "black", fontWeight: "bold", marginHorizontal: 4 }}
+          >
+            ₹{user?.walletBalance?.toFixed(2) || "0.00"}
+          </Text>
+
+          <Ionicons name="add" size={16} color="black" />
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
