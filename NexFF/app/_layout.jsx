@@ -1,18 +1,18 @@
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import "../global.css";
-import Toast from "react-native-toast-message"; // ✅ FIXED
+import Toast from "react-native-toast-message";
 import { Provider, useDispatch } from "react-redux";
 import store from "../src/redux/store/store";
 import { StatusBar } from "expo-status-bar";
 import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { setUser } from "../src/redux/slices/userSlice";
-import { SafeAreaProvider } from "react-native-safe-area-context"; // ✅ IMPORTANT
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { View, ActivityIndicator } from "react-native";
 
-// export const API = "http://192.168.239.227:3000/api";
 export const API = "https://nexff.onrender.com/api";
 
-// 🔥 Outer Component
+// 🔥 Root Wrapper
 export default function RootLayout() {
   return (
     <Provider store={store}>
@@ -23,7 +23,7 @@ export default function RootLayout() {
   );
 }
 
-// 🔥 Inner Component
+// 🔥 Main Logic
 function AppContent() {
   const dispatch = useDispatch();
   const [loading, setLoading] = useState(true);
@@ -35,9 +35,14 @@ function AppContent() {
 
         if (savedUser) {
           dispatch(setUser(JSON.parse(savedUser)));
+
+          router.replace("/(tabs)");
+        } else {
+          router.replace("/login");
         }
       } catch (error) {
         console.log("Storage Error:", error);
+        router.replace("/login");
       } finally {
         setLoading(false);
       }
@@ -46,7 +51,21 @@ function AppContent() {
     loadUser();
   }, []);
 
-  if (loading) return null;
+  // 🔥 Loading screen (important)
+  if (loading) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "black",
+        }}
+      >
+        <ActivityIndicator size="large" color="yellow" />
+      </View>
+    );
+  }
 
   return (
     <>
@@ -58,7 +77,6 @@ function AppContent() {
         <Stack.Screen name="register" />
       </Stack>
 
-      {/* 🔥 Toast MUST be here */}
       <Toast />
     </>
   );
