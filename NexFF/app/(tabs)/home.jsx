@@ -5,7 +5,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import Header from "../../src/components/Header.jsx";
 import TournamentCard from "../../src/components/TournamentCard.jsx";
-import Loader from "../../src/components/Loader";
+import Loader from "../../src/components/Loader.jsx";
 import { LinearGradient } from "expo-linear-gradient";
 
 const tournaments = [

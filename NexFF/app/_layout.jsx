@@ -1,4 +1,4 @@
-import { Stack, router } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import "../global.css";
 import Toast from "react-native-toast-message";
 import { Provider, useDispatch } from "react-redux";
@@ -26,6 +26,7 @@ export default function RootLayout() {
 // 🔥 Main Logic
 function AppContent() {
   const dispatch = useDispatch();
+  const router = useRouter(); // ✅ correct
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,13 +37,21 @@ function AppContent() {
         if (savedUser) {
           dispatch(setUser(JSON.parse(savedUser)));
 
-          router.replace("/(tabs)");
+          // ✅ delay navigation (important fix)
+          setTimeout(() => {
+            router.replace("/home"); // 🔥 direct screen
+          }, 0);
         } else {
-          router.replace("/login");
+          setTimeout(() => {
+            router.replace("/login");
+          }, 0);
         }
       } catch (error) {
         console.log("Storage Error:", error);
-        router.replace("/login");
+
+        setTimeout(() => {
+          router.replace("/login");
+        }, 0);
       } finally {
         setLoading(false);
       }
@@ -51,7 +60,7 @@ function AppContent() {
     loadUser();
   }, []);
 
-  // 🔥 Loading screen (important)
+  // 🔥 Loading screen
   if (loading) {
     return (
       <View
