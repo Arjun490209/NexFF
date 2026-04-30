@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 dotenv.config();
 import cors from "cors";
 import authRouter from "./routes/auth.route.js";
+import tournamentRouter from "./routes/tournament.route.js";
 import connectDB from "./config/db.js";
 
 const app = express();
@@ -24,6 +25,7 @@ app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 app.use("/api/auth", authRouter);
+app.use("/api/tournament", tournamentRouter);
 
 app.listen(port, () => {
   console.log(`server running port - ${port}`);

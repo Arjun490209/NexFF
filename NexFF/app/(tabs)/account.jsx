@@ -7,7 +7,6 @@ import AdminAccount from "../../src/components/account/AdminAccount";
 
 const Account = () => {
   const user = useSelector((state) => state?.user?.user);
-  console.log(user);
 
   if (!user) {
     return null; // ya loader

@@ -1,4 +1,4 @@
-import { Stack, useRouter } from "expo-router";
+import { Stack, Redirect, useSegments } from "expo-router";
 import "../global.css";
 import Toast from "react-native-toast-message";
 import { Provider, useDispatch } from "react-redux";
@@ -10,9 +10,10 @@ import { setUser } from "../src/redux/slices/userSlice";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { View, ActivityIndicator } from "react-native";
 
-export const API = "https://nexff.onrender.com/api";
+export const API = __DEV__
+  ? "http://192.168.150.104:3000/api"
+  : "https://nexff.onrender.com/api";
 
-// 🔥 Root Wrapper
 export default function RootLayout() {
   return (
     <Provider store={store}>
@@ -23,11 +24,11 @@ export default function RootLayout() {
   );
 }
 
-// 🔥 Main Logic
 function AppContent() {
   const dispatch = useDispatch();
-  const router = useRouter(); // ✅ correct
+  const segments = useSegments(); // 🔥 important
   const [loading, setLoading] = useState(true);
+  const [user, setUserState] = useState(null);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -35,23 +36,12 @@ function AppContent() {
         const savedUser = await AsyncStorage.getItem("user");
 
         if (savedUser) {
-          dispatch(setUser(JSON.parse(savedUser)));
-
-          // ✅ delay navigation (important fix)
-          setTimeout(() => {
-            router.replace("/home"); // 🔥 direct screen
-          }, 0);
-        } else {
-          setTimeout(() => {
-            router.replace("/login");
-          }, 0);
+          const parsed = JSON.parse(savedUser);
+          dispatch(setUser(parsed));
+          setUserState(parsed);
         }
-      } catch (error) {
-        console.log("Storage Error:", error);
-
-        setTimeout(() => {
-          router.replace("/login");
-        }, 0);
+      } catch (e) {
+        console.log("Storage Error:", e);
       } finally {
         setLoading(false);
       }
@@ -60,7 +50,6 @@ function AppContent() {
     loadUser();
   }, []);
 
-  // 🔥 Loading screen
   if (loading) {
     return (
       <View
@@ -74,6 +63,17 @@ function AppContent() {
         <ActivityIndicator size="large" color="yellow" />
       </View>
     );
+  }
+
+  const inAuthScreen = segments[0] === "login" || segments[0] === "register";
+
+  // 🔥 FIX: prevent redirect loop
+  if (!user && !inAuthScreen) {
+    return <Redirect href="/login" />;
+  }
+
+  if (user && inAuthScreen) {
+    return <Redirect href="/(tabs)/home" />;
   }
 
   return (
