@@ -11,7 +11,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { View, ActivityIndicator } from "react-native";
 
 export const API = __DEV__
-  ? "http://192.168.150.104:3000/api"
+  ? "http://192.168.234.227:3000/api"
   : "https://nexff.onrender.com/api";
 
 export default function RootLayout() {

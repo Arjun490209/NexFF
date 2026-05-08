@@ -38,7 +38,6 @@ const CreateTournament = () => {
     setForm({ ...form, [key]: value });
   };
 
-  // 🔥 VALIDATION
   const isInvalid =
     !form.title ||
     isNaN(form.entryFee) ||

@@ -16,8 +16,10 @@ import { logout } from "../../redux/slices/userSlice";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Toast from "react-native-toast-message";
 import avatar from "../../../assets/images/avatar.png";
+import { useRouter } from "expo-router";
 
 const WorkerAccount = () => {
+  const router = useRouter();
   const navigation = useNavigation();
   const dispatch = useDispatch();
   const worker = useSelector((state) => state?.user?.user);
@@ -51,37 +53,37 @@ const WorkerAccount = () => {
       title: "Create Tournament",
       icon: "add-circle",
       color: "#22c55e",
-      onPress: () => navigation.navigate("CreateTournament"),
+      onPress: () => router.push("/admin/create"),
     },
     {
       title: "Manage Matches",
       icon: "game-controller",
       color: "#3b82f6",
-      onPress: () => navigation.navigate("ManageMatches"),
+      onPress: () => router.push("/admin/create"),
     },
     {
       title: "Give Room ID",
       icon: "key",
       color: "#f59e0b",
-      onPress: () => navigation.navigate("RoomControl"),
+      onPress: () => router.push("/admin/create"),
     },
     {
       title: "Verify Results",
       icon: "checkmark-circle",
       color: "#22c55e",
-      onPress: () => navigation.navigate("VerifyResults"),
+      onPress: () => router.push("/admin/create"),
     },
     {
       title: "Add Winner Amount",
       icon: "cash",
       color: "#10b981",
-      onPress: () => navigation.navigate("AddWinning"),
+      onPress: () => router.push("/admin/create"),
     },
     {
       title: "Withdraw Requests",
       icon: "wallet",
       color: "#ef4444",
-      onPress: () => navigation.navigate("WithdrawRequests"),
+      onPress: () => router.push("/admin/create"),
     },
   ];
 
