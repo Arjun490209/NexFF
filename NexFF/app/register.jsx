@@ -16,7 +16,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { registerSchema } from "../src/validation/registerSchema";
 import axios from "axios";
-import { API } from "../app/_layout";
+import { API } from "../src/config/api.js";
 import Toast from "react-native-toast-message";
 import { useSelector } from "react-redux";
 import { setUser } from "../src/redux/slices/userSlice";

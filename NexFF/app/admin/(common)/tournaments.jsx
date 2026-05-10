@@ -11,7 +11,7 @@ import axios from "axios";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
-import { API } from "../../_layout";
+import { API } from "../../../src/config/api.js";
 import { useSelector } from "react-redux";
 
 const Tournaments = () => {

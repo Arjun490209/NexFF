@@ -10,10 +10,6 @@ import { setUser } from "../src/redux/slices/userSlice";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { View, ActivityIndicator } from "react-native";
 
-export const API = __DEV__
-  ? "http://192.168.234.227:3000/api"
-  : "https://nexff.onrender.com/api";
-
 export default function RootLayout() {
   return (
     <Provider store={store}>
@@ -84,6 +80,7 @@ function AppContent() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="login" />
         <Stack.Screen name="register" />
+        <Stack.Screen name="contest/[id]" />
       </Stack>
 
       <Toast />

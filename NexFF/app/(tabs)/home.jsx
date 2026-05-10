@@ -5,6 +5,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   FlatList,
+  Alert,
 } from "react-native";
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
@@ -13,9 +14,13 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import Header from "../../src/components/Header.jsx";
 import Loader from "../../src/components/Loader.jsx";
-import { API } from "../_layout.jsx";
+import { API } from "../../src/config/api.js";
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Home = () => {
+  const router = useRouter();
+
   const user = useSelector((state) => state?.user?.user);
 
   const [tournaments, setTournaments] = useState([]);
@@ -23,10 +28,10 @@ const Home = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedTab, setSelectedTab] = useState("upcoming");
   const [error, setError] = useState("");
+  const [joiningId, setJoiningId] = useState(null);
 
   const tabs = ["upcoming", "live", "completed"];
 
-  // 🔥 FAST FETCH
   const fetchTournaments = async (isRefresh = false) => {
     try {
       setError("");
@@ -37,13 +42,18 @@ const Home = () => {
         setLoading(true);
       }
 
-      const { data } = await axios.get(`${API}/tournament`, {
-        timeout: 5000,
-      });
+      console.log("Fetching tournaments...");
+
+      const response = await fetch(`${API}/tournament`);
+
+      const data = await response.json();
+
+      console.log("TOURNAMENT DATA:", data);
 
       setTournaments(data?.tournaments || []);
     } catch (err) {
-      console.log(err.message);
+      console.log("HOME ERROR:", err);
+
       setError("Failed to load tournaments");
     } finally {
       setLoading(false);
@@ -55,9 +65,47 @@ const Home = () => {
     fetchTournaments();
   }, []);
 
+  // 🔥 JOIN CONTEST
+  const joinContest = async (contestId) => {
+    try {
+      setJoiningId(contestId);
+
+      const token = await AsyncStorage.getItem("token");
+
+      if (!token) {
+        Alert.alert("Error", "Please login again");
+        return;
+      }
+
+      const { data } = await axios.post(
+        `${API}/tournament/join/${contestId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      Alert.alert("Success 🚀", data?.message || "Joined Successfully");
+
+      // 🔥 REFRESH LIST
+      fetchTournaments(true);
+    } catch (err) {
+      console.log(err?.response?.data || err.message);
+
+      Alert.alert(
+        "Error",
+        err?.response?.data?.message || "Failed to join contest",
+      );
+    } finally {
+      setJoiningId(null);
+    }
+  };
+
   if (!user) return <Loader />;
 
-  // 🔥 FILTER
+  // 🔥 FILTER TOURNAMENTS
   const filtered = useMemo(() => {
     return tournaments.filter((t) => t.status?.trim() === selectedTab);
   }, [tournaments, selectedTab]);
@@ -72,104 +120,117 @@ const Home = () => {
     return "#6b7280";
   };
 
-  // 🎮 CARD
-  const renderItem = useCallback(({ item }) => {
-    const joined = item.joinedPlayers?.length || 0;
+  // 🎮 CARD UI
+  const renderItem = useCallback(
+    ({ item }) => {
+      const joined = item.joinedPlayers?.length || 0;
 
-    const percent = (joined / item.totalSlots) * 100;
+      const percent = (joined / item.totalSlots) * 100;
 
-    return (
-      <View className="bg-gray-900 rounded-3xl p-4 mb-4 border border-gray-800">
-        {/* HEADER */}
-        <View className="flex-row justify-between items-center">
-          <View>
-            <Text className="text-white text-lg font-bold">{item.title}</Text>
+      return (
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => router.push(`/contest/${item._id}`)}
+          className="bg-gray-900 rounded-3xl p-4 mb-4 border border-gray-800"
+        >
+          {/* HEADER */}
+          <View className="flex-row justify-between items-center">
+            <View>
+              <Text className="text-white text-lg font-bold">{item.title}</Text>
 
-            <Text className="text-gray-400 text-xs mt-1">
-              {item.mode} • {item.map}
-            </Text>
-          </View>
+              <Text className="text-gray-400 text-xs mt-1">
+                {item.mode} • {item.map}
+              </Text>
+            </View>
 
-          {/* STATUS */}
-          <View
-            style={{
-              backgroundColor: getStatusColor(item.status),
-              paddingHorizontal: 10,
-              paddingVertical: 4,
-              borderRadius: 999,
-            }}
-          >
-            <Text className="text-black text-[10px] font-bold">
-              {item.status.toUpperCase()}
-            </Text>
-          </View>
-        </View>
-
-        {/* MONEY */}
-        <View className="flex-row justify-between mt-5">
-          <View className="items-center">
-            <Text className="text-gray-500 text-[10px]">ENTRY</Text>
-
-            <Text className="text-yellow-400 font-bold text-base">
-              ₹{item.entryFee}
-            </Text>
-          </View>
-
-          <View className="items-center">
-            <Text className="text-gray-500 text-[10px]">PRIZE</Text>
-
-            <Text className="text-green-400 font-bold text-base">
-              ₹{item.prizePool}
-            </Text>
-          </View>
-
-          <View className="items-center">
-            <Text className="text-gray-500 text-[10px]">PER KILL</Text>
-
-            <Text className="text-white font-bold text-base">
-              ₹{item.perKillReward}
-            </Text>
-          </View>
-        </View>
-
-        {/* PROGRESS */}
-        <View className="mt-5">
-          <View className="bg-gray-700 h-2 rounded-full overflow-hidden">
+            {/* STATUS */}
             <View
               style={{
-                width: `${percent}%`,
-                backgroundColor: "#facc15",
-                height: 8,
+                backgroundColor: getStatusColor(item.status),
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                borderRadius: 999,
               }}
-            />
+            >
+              <Text className="text-black text-[10px] font-bold">
+                {item.status.toUpperCase()}
+              </Text>
+            </View>
           </View>
 
-          <View className="flex-row justify-between mt-1">
-            <Text className="text-gray-400 text-[10px]">
-              {joined}/{item.totalSlots} Joined
-            </Text>
+          {/* MONEY */}
+          <View className="flex-row justify-between mt-5">
+            <View className="items-center">
+              <Text className="text-gray-500 text-[10px]">ENTRY</Text>
 
-            <Text className="text-gray-400 text-[10px]">
-              {Math.floor(percent)}%
-            </Text>
+              <Text className="text-yellow-400 font-bold text-base">
+                ₹{item.entryFee}
+              </Text>
+            </View>
+
+            <View className="items-center">
+              <Text className="text-gray-500 text-[10px]">PRIZE</Text>
+
+              <Text className="text-green-400 font-bold text-base">
+                ₹{item.prizePool}
+              </Text>
+            </View>
+
+            <View className="items-center">
+              <Text className="text-gray-500 text-[10px]">PER KILL</Text>
+
+              <Text className="text-white font-bold text-base">
+                ₹{item.perKillReward}
+              </Text>
+            </View>
           </View>
-        </View>
 
-        {/* TIME */}
-        <Text className="text-gray-500 text-[11px] mt-4">
-          Starts: {new Date(item.startTime).toLocaleString()}
-        </Text>
+          {/* PROGRESS */}
+          <View className="mt-5">
+            <View className="bg-gray-700 h-2 rounded-full overflow-hidden">
+              <View
+                style={{
+                  width: `${percent}%`,
+                  backgroundColor: "#facc15",
+                  height: 8,
+                }}
+              />
+            </View>
 
-        {/* BUTTON */}
-        <TouchableOpacity
-          className="bg-yellow-400 mt-5 py-3 rounded-2xl items-center"
-          activeOpacity={0.8}
-        >
-          <Text className="text-black font-bold">Join Contest 🚀</Text>
+            <View className="flex-row justify-between mt-1">
+              <Text className="text-gray-400 text-[10px]">
+                {joined}/{item.totalSlots} Joined
+              </Text>
+
+              <Text className="text-gray-400 text-[10px]">
+                {Math.floor(percent)}%
+              </Text>
+            </View>
+          </View>
+
+          {/* TIME */}
+          <Text className="text-gray-500 text-[11px] mt-4">
+            Starts: {new Date(item.startTime).toLocaleString()}
+          </Text>
+
+          {/* JOIN BUTTON */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            disabled={joiningId === item._id}
+            onPress={() => joinContest(item._id)}
+            className="bg-yellow-400 mt-5 py-3 rounded-2xl items-center"
+          >
+            {joiningId === item._id ? (
+              <ActivityIndicator color="#000" />
+            ) : (
+              <Text className="text-black font-bold">Join Contest 🚀</Text>
+            )}
+          </TouchableOpacity>
         </TouchableOpacity>
-      </View>
-    );
-  }, []);
+      );
+    },
+    [joiningId],
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-black">
@@ -216,7 +277,6 @@ const Home = () => {
             Check internet or server connection
           </Text>
 
-          {/* 🔥 RELOAD BUTTON */}
           <TouchableOpacity
             onPress={() => fetchTournaments()}
             className="bg-yellow-400 mt-5 px-6 py-3 rounded-2xl"
@@ -225,7 +285,7 @@ const Home = () => {
           </TouchableOpacity>
         </View>
       ) : (
-        // 🚀 FAST LIST
+        // 🚀 TOURNAMENT LIST
         <FlatList
           data={filtered}
           keyExtractor={(item) => item._id}

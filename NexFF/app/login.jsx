@@ -17,7 +17,7 @@ import { Redirect, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import logo from "../assets/images/logo.png";
-import { API } from "./_layout";
+import { API } from "../src/config/api.js";
 import { StatusBar } from "expo-status-bar";
 import axios from "axios";
 import Toast from "react-native-toast-message";
