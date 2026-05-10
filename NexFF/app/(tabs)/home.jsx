@@ -225,27 +225,49 @@ const Home = () => {
           </Text>
 
           {/* JOIN BUTTON */}
-          {/* JOIN BUTTON */}
-          <TouchableOpacity
-            activeOpacity={0.8}
-            disabled={
-              joiningId === item._id || item.joinedPlayers?.includes(user?._id)
-            }
-            onPress={() => joinContest(item._id)}
-            className={`mt-5 py-3 rounded-2xl items-center ${
-              item.joinedPlayers?.includes(user?._id)
-                ? "bg-green-500"
-                : "bg-yellow-400"
-            }`}
-          >
-            {joiningId === item._id ? (
-              <ActivityIndicator color="#000" />
-            ) : item.joinedPlayers?.includes(user?._id) ? (
-              <Text className="text-white font-bold">Joined ✅</Text>
-            ) : (
-              <Text className="text-black font-bold">Join Contest 🚀</Text>
-            )}
-          </TouchableOpacity>
+          {/* JOIN SECTION */}
+
+          {item.status?.trim() === "upcoming" ? (
+            <TouchableOpacity
+              activeOpacity={0.8}
+              disabled={
+                joiningId === item._id ||
+                item.joinedPlayers?.some(
+                  (playerId) => String(playerId) === String(user?._id),
+                )
+              }
+              onPress={() => joinContest(item._id)}
+              className={`mt-5 py-3 rounded-2xl items-center ${
+                item.joinedPlayers?.some(
+                  (playerId) => String(playerId) === String(user?._id),
+                )
+                  ? "bg-green-500"
+                  : "bg-yellow-400"
+              }`}
+            >
+              {joiningId === item._id ? (
+                <ActivityIndicator color="#000" />
+              ) : item.joinedPlayers?.some(
+                  (playerId) => String(playerId) === String(user?._id),
+                ) ? (
+                <Text className="text-white font-bold">Joined ✅</Text>
+              ) : (
+                <Text className="text-black font-bold">Join Contest 🚀</Text>
+              )}
+            </TouchableOpacity>
+          ) : (
+            <View
+              className={`mt-5 py-3 rounded-2xl items-center ${
+                item.status?.trim() === "live" ? "bg-green-600" : "bg-gray-700"
+              }`}
+            >
+              <Text className="text-white font-bold">
+                {item.status?.trim() === "live"
+                  ? "Match Live 🔥"
+                  : "Contest Closed ❌"}
+              </Text>
+            </View>
+          )}
         </TouchableOpacity>
       );
     },
