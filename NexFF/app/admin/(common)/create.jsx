@@ -14,6 +14,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { API } from "../../../src/config/api.js";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const CreateTournament = () => {
   const router = useRouter();
@@ -51,27 +52,61 @@ const CreateTournament = () => {
         type: "error",
         text1: "Enter valid details ❌",
       });
+
       return;
     }
 
     try {
       setLoading(true);
 
-      await axios.post(`${API}/tournament/create`, {
-        ...form,
-        entryFee: Number(form.entryFee),
-        prizePool: Number(form.prizePool),
-        perKillReward: Number(form.perKillReward),
-        totalSlots: Number(form.totalSlots),
-        startTime: date,
-      });
+      const saved = await AsyncStorage.getItem("user");
+
+      const parsed = saved ? JSON.parse(saved) : null;
+
+      const token = parsed?.token;
+
+      if (!token) {
+        Toast.show({
+          type: "error",
+          text1: "Login Required ❌",
+          text2: "Please login to join contest",
+          visibilityTime: 3000,
+        });
+        return;
+      }
+
+      if (!token) {
+        Toast.show({
+          type: "error",
+          text1: "Login Required ❌",
+        });
+
+        return;
+      }
+
+      await axios.post(
+        `${API}/tournament/create`,
+        {
+          ...form,
+          entryFee: Number(form.entryFee),
+          prizePool: Number(form.prizePool),
+          perKillReward: Number(form.perKillReward),
+          totalSlots: Number(form.totalSlots),
+          startTime: date,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
 
       Toast.show({
         type: "success",
         text1: "Tournament Created 🎉",
       });
 
-      // reset
+      // RESET
       setForm({
         title: "",
         entryFee: "",
@@ -85,12 +120,15 @@ const CreateTournament = () => {
       });
 
       setDate(new Date());
+
       router.push("/account");
     } catch (err) {
+      console.log(err?.response?.data || err.message);
+
       Toast.show({
         type: "error",
         text1: "Error ❌",
-        text2: err.message,
+        text2: err?.response?.data?.message || "Failed to create",
       });
     } finally {
       setLoading(false);

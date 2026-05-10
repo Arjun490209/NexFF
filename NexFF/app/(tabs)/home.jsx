@@ -16,6 +16,7 @@ import Header from "../../src/components/Header.jsx";
 import Loader from "../../src/components/Loader.jsx";
 import { API } from "../../src/config/api.js";
 import { useRouter } from "expo-router";
+import Toast from "react-native-toast-message";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const Home = () => {
@@ -42,18 +43,12 @@ const Home = () => {
         setLoading(true);
       }
 
-      console.log("Fetching tournaments...");
-
       const response = await fetch(`${API}/tournament`);
 
       const data = await response.json();
 
-      console.log("TOURNAMENT DATA:", data);
-
       setTournaments(data?.tournaments || []);
     } catch (err) {
-      console.log("HOME ERROR:", err);
-
       setError("Failed to load tournaments");
     } finally {
       setLoading(false);
@@ -70,10 +65,19 @@ const Home = () => {
     try {
       setJoiningId(contestId);
 
-      const token = await AsyncStorage.getItem("token");
+      const saved = await AsyncStorage.getItem("user");
+
+      const parsed = saved ? JSON.parse(saved) : null;
+
+      const token = parsed?.token;
 
       if (!token) {
-        Alert.alert("Error", "Please login again");
+        Toast.show({
+          type: "error",
+          text1: "Login Required ❌",
+          text2: "Please login to join contest",
+          visibilityTime: 3000,
+        });
         return;
       }
 
@@ -87,17 +91,24 @@ const Home = () => {
         },
       );
 
-      Alert.alert("Success 🚀", data?.message || "Joined Successfully");
+      Toast.show({
+        type: "success",
+        text1: "Success 🚀",
+        text2: data?.message || "Joined Successfully",
+        visibilityTime: 3000,
+      });
 
       // 🔥 REFRESH LIST
       fetchTournaments(true);
     } catch (err) {
-      console.log(err?.response?.data || err.message);
+      // console.log(err?.response?.data || err.message);
 
-      Alert.alert(
-        "Error",
-        err?.response?.data?.message || "Failed to join contest",
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error ❌",
+        text2: err?.response?.data?.message || "Failed to join contest",
+        visibilityTime: 3000,
+      });
     } finally {
       setJoiningId(null);
     }
@@ -214,14 +225,23 @@ const Home = () => {
           </Text>
 
           {/* JOIN BUTTON */}
+          {/* JOIN BUTTON */}
           <TouchableOpacity
             activeOpacity={0.8}
-            disabled={joiningId === item._id}
+            disabled={
+              joiningId === item._id || item.joinedPlayers?.includes(user?._id)
+            }
             onPress={() => joinContest(item._id)}
-            className="bg-yellow-400 mt-5 py-3 rounded-2xl items-center"
+            className={`mt-5 py-3 rounded-2xl items-center ${
+              item.joinedPlayers?.includes(user?._id)
+                ? "bg-green-500"
+                : "bg-yellow-400"
+            }`}
           >
             {joiningId === item._id ? (
               <ActivityIndicator color="#000" />
+            ) : item.joinedPlayers?.includes(user?._id) ? (
+              <Text className="text-white font-bold">Joined ✅</Text>
             ) : (
               <Text className="text-black font-bold">Join Contest 🚀</Text>
             )}
