@@ -59,30 +59,12 @@ const WorkerAccount = () => {
       title: "Manage Matches",
       icon: "game-controller",
       color: "#3b82f6",
-      onPress: () => router.push("/admin/create"),
-    },
-    {
-      title: "Give Room ID",
-      icon: "key",
-      color: "#f59e0b",
-      onPress: () => router.push("/admin/create"),
-    },
-    {
-      title: "Verify Results",
-      icon: "checkmark-circle",
-      color: "#22c55e",
-      onPress: () => router.push("/admin/create"),
+      onPress: () => router.push("/admin/tournaments"),
     },
     {
       title: "Add Winner Amount",
       icon: "cash",
       color: "#10b981",
-      onPress: () => router.push("/admin/create"),
-    },
-    {
-      title: "Withdraw Requests",
-      icon: "wallet",
-      color: "#ef4444",
       onPress: () => router.push("/admin/create"),
     },
   ];
