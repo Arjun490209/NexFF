@@ -3,8 +3,10 @@ import React from "react";
 import { useSelector } from "react-redux";
 import { Ionicons } from "@expo/vector-icons";
 import defaultAvatar from "../../assets/images/avatar.png";
+import { useRouter } from "expo-router";
 
 const Header = () => {
+  const router = useRouter();
   const user = useSelector((state) => state?.user?.user);
 
   const avatarSource =
@@ -63,6 +65,7 @@ const Header = () => {
 
         {/* 💰 */}
         <TouchableOpacity
+          onPress={() => router.push("/add-money")}
           style={{
             flexDirection: "row",
             alignItems: "center",
