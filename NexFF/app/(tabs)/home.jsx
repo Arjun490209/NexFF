@@ -61,8 +61,20 @@ const Home = () => {
   }, []);
 
   // 🔥 JOIN CONTEST
-  const joinContest = async (contestId) => {
+  const joinContest = async (contestId, entryFee) => {
     try {
+      // 💰 CHECK BALANCE
+      if ((user?.walletBalance || 0) < entryFee) {
+        Toast.show({
+          type: "error",
+          text1: "Insufficient Balance 💸",
+          text2: "Please add money to join contest",
+          visibilityTime: 3000,
+        });
+
+        return router.push("/add-money");
+      }
+
       setJoiningId(contestId);
 
       const saved = await AsyncStorage.getItem("user");
@@ -78,6 +90,7 @@ const Home = () => {
           text2: "Please login to join contest",
           visibilityTime: 3000,
         });
+
         return;
       }
 
@@ -101,8 +114,6 @@ const Home = () => {
       // 🔥 REFRESH LIST
       fetchTournaments(true);
     } catch (err) {
-      // console.log(err?.response?.data || err.message);
-
       Toast.show({
         type: "error",
         text1: "Error ❌",
@@ -236,7 +247,7 @@ const Home = () => {
                   (playerId) => String(playerId) === String(user?._id),
                 )
               }
-              onPress={() => joinContest(item._id)}
+              onPress={() => joinContest(item._id, item.entryFee)}
               className={`mt-5 py-3 rounded-2xl items-center ${
                 item.joinedPlayers?.some(
                   (playerId) => String(playerId) === String(user?._id),

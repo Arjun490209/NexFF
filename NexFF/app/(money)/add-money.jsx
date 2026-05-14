@@ -9,16 +9,9 @@ import {
   Dimensions,
 } from "react-native";
 
-import {
-  Ionicons,
-  MaterialCommunityIcons,
-  FontAwesome5,
-  Feather,
-} from "@expo/vector-icons";
+import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 
 import { LinearGradient } from "expo-linear-gradient";
-import { BlurView } from "expo-blur";
-
 import Toast from "react-native-toast-message";
 import axios from "axios";
 import RazorpayCheckout from "react-native-razorpay";
@@ -36,7 +29,7 @@ const AddMoney = () => {
   const user = useSelector((state) => state?.user?.user);
   const token = useSelector((state) => state?.user?.token);
 
-  const quickAmounts = [50, 100, 200, 500, 1000, 2000];
+  const quickAmounts = [100, 200, 500, 1000, 2000, 5000];
 
   const MIN_AMOUNT = 50;
   const MAX_AMOUNT = 10000;
@@ -67,7 +60,6 @@ const AddMoney = () => {
     try {
       const numericAmount = Number(amount);
 
-      // VALIDATION
       if (!amount || numericAmount < MIN_AMOUNT) {
         return Toast.show({
           type: "error",
@@ -86,9 +78,7 @@ const AddMoney = () => {
 
       setLoading(true);
 
-      // ==========================
       // CREATE ORDER
-      // ==========================
       const { data } = await axios.post(
         `${API}/payment/create-order`,
         {
@@ -101,16 +91,14 @@ const AddMoney = () => {
         },
       );
 
-      // ==========================
-      // RAZORPAY OPTIONS
-      // ==========================
       const options = {
-        description: "Add Money To Wallet",
+        description: "Add Cash To Wallet",
+
         image: "https://cdn-icons-png.flaticon.com/512/217/217853.png",
 
         currency: "INR",
 
-        key: "RAZORPAY_KEY_ID", // replace with your real key
+        key: "rzp_test_Sp3d5I4jQQ6SIO",
 
         amount: data?.order?.amount,
 
@@ -120,25 +108,60 @@ const AddMoney = () => {
 
         prefill: {
           email: user?.email || "demo@gmail.com",
+
           contact: user?.phone || "9999999999",
+
           name: user?.name || "User",
         },
 
         theme: {
-          color: "#facc15",
+          color: "#14b8a6",
+        },
+
+        // ✅ ENABLE UPI
+        method: {
+          upi: true,
+          card: true,
+          netbanking: true,
+          wallet: true,
+        },
+
+        // ✅ OPEN UPI FIRST
+        config: {
+          display: {
+            blocks: {
+              upi: {
+                name: "Pay Using UPI",
+                instruments: [
+                  {
+                    method: "upi",
+                  },
+                ],
+              },
+
+              cards: {
+                name: "Pay Using Cards",
+                instruments: [
+                  {
+                    method: "card",
+                  },
+                ],
+              },
+            },
+
+            sequence: ["block.upi", "block.cards"],
+
+            preferences: {
+              show_default_blocks: true,
+            },
+          },
         },
       };
 
-      // ==========================
-      // OPEN RAZORPAY
-      // ==========================
       RazorpayCheckout.open(options)
 
         .then(async (paymentData) => {
           try {
-            // ==========================
-            // VERIFY PAYMENT
-            // ==========================
             const verifyRes = await axios.post(
               `${API}/payment/verify-payment`,
               {
@@ -159,13 +182,10 @@ const AddMoney = () => {
 
             setLoading(false);
 
-            // ==========================
-            // SUCCESS
-            // ==========================
             if (verifyRes?.data?.success) {
               Toast.show({
                 type: "success",
-                text1: "Payment Successful",
+                text1: "Cash Added 💰",
                 text2: `₹${numericAmount} added successfully`,
               });
 
@@ -173,8 +193,6 @@ const AddMoney = () => {
             }
           } catch (error) {
             setLoading(false);
-
-            console.log(error);
 
             Toast.show({
               type: "error",
@@ -184,21 +202,17 @@ const AddMoney = () => {
           }
         })
 
-        .catch((error) => {
+        .catch(() => {
           setLoading(false);
-
-          console.log(error);
 
           Toast.show({
             type: "error",
             text1: "Payment Cancelled",
-            text2: "Transaction cancelled by user",
+            text2: "Transaction cancelled",
           });
         });
     } catch (error) {
       setLoading(false);
-
-      console.log(error);
 
       Toast.show({
         type: "error",
@@ -212,53 +226,26 @@ const AddMoney = () => {
     <View
       style={{
         flex: 1,
-        backgroundColor: "#030303",
+        backgroundColor: "#f3f4f6",
       }}
     >
-      <StatusBar barStyle="light-content" />
-
-      {/* GLOW */}
-      <View
-        style={{
-          position: "absolute",
-          top: -120,
-          right: -100,
-          height: 300,
-          width: 300,
-          borderRadius: 200,
-          backgroundColor: "#facc15",
-          opacity: 0.15,
-        }}
-      />
-
-      <View
-        style={{
-          position: "absolute",
-          bottom: -120,
-          left: -100,
-          height: 250,
-          width: 250,
-          borderRadius: 200,
-          backgroundColor: "#eab308",
-          opacity: 0.08,
-        }}
-      />
+      <StatusBar barStyle="dark-content" />
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{
-          paddingBottom: 140,
+          paddingBottom: 120,
         }}
       >
         {/* HEADER */}
         <LinearGradient
-          colors={["#151515", "#080808"]}
+          colors={["#14b8a6", "#0f766e"]}
           style={{
-            paddingTop: 65,
-            paddingHorizontal: 22,
-            paddingBottom: 30,
-            borderBottomLeftRadius: 35,
-            borderBottomRightRadius: 35,
+            paddingTop: 58,
+            paddingHorizontal: 18,
+            paddingBottom: 28,
+            borderBottomLeftRadius: 24,
+            borderBottomRightRadius: 24,
           }}
         >
           <View
@@ -272,191 +259,218 @@ const AddMoney = () => {
               <Text
                 style={{
                   color: "#fff",
-                  fontSize: 34,
-                  fontWeight: "900",
-                  letterSpacing: 1,
+                  fontSize: 24,
+                  fontWeight: "800",
                 }}
               >
-                Add Money
+                Add Cash
               </Text>
 
               <Text
                 style={{
-                  color: "#9ca3af",
-                  marginTop: 6,
-                  fontSize: 13,
+                  color: "#ccfbf1",
+                  marginTop: 3,
+                  fontSize: 11,
                 }}
               >
-                Instant wallet recharge for tournaments
+                Secure & Instant Payments
               </Text>
             </View>
 
-            <LinearGradient
-              colors={["#facc15", "#eab308"]}
+            <View
               style={{
-                height: 65,
-                width: 65,
-                borderRadius: 35,
-                alignItems: "center",
-                justifyContent: "center",
+                backgroundColor: "rgba(255,255,255,0.2)",
+                padding: 12,
+                borderRadius: 16,
               }}
             >
-              <Ionicons name="wallet" size={30} color="#000" />
-            </LinearGradient>
+              <Ionicons name="wallet" size={22} color="#fff" />
+            </View>
+          </View>
+
+          {/* BALANCE CARD */}
+          <View
+            style={{
+              backgroundColor: "#fff",
+              marginTop: 22,
+              borderRadius: 18,
+              padding: 18,
+            }}
+          >
+            <Text
+              style={{
+                color: "#6b7280",
+                fontSize: 11,
+                fontWeight: "700",
+              }}
+            >
+              CURRENT BALANCE
+            </Text>
+
+            <Text
+              style={{
+                color: "#111827",
+                fontSize: 28,
+                fontWeight: "900",
+                marginTop: 8,
+              }}
+            >
+              ₹{user?.walletBalance?.toFixed(2) || "0.00"}
+            </Text>
+
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                marginTop: 10,
+              }}
+            >
+              <Ionicons name="checkmark-circle" size={14} color="#22c55e" />
+
+              <Text
+                style={{
+                  color: "#22c55e",
+                  marginLeft: 5,
+                  fontSize: 11,
+                  fontWeight: "700",
+                }}
+              >
+                Trusted Payments
+              </Text>
+            </View>
           </View>
         </LinearGradient>
 
         <View
           style={{
-            paddingHorizontal: 20,
-            marginTop: 25,
+            paddingHorizontal: 16,
+            marginTop: 20,
           }}
         >
-          {/* WALLET CARD */}
+          {/* BONUS */}
           <LinearGradient
-            colors={["#1f2937", "#111827", "#0f172a"]}
+            colors={["#f97316", "#ea580c"]}
             style={{
-              borderRadius: 30,
-              padding: 25,
-              overflow: "hidden",
-              marginBottom: 28,
-            }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-              }}
-            >
-              <View>
-                <Text
-                  style={{
-                    color: "#9ca3af",
-                    fontSize: 13,
-                  }}
-                >
-                  WALLET BALANCE
-                </Text>
-
-                <Text
-                  style={{
-                    color: "#fff",
-                    fontSize: 40,
-                    fontWeight: "900",
-                    marginTop: 12,
-                  }}
-                >
-                  ₹{user?.walletBalance?.toFixed(2) || "0.00"}
-                </Text>
-              </View>
-
-              <BlurView
-                intensity={30}
-                tint="dark"
-                style={{
-                  height: 55,
-                  width: 55,
-                  borderRadius: 18,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  overflow: "hidden",
-                }}
-              >
-                <Feather name="zap" size={28} color="#facc15" />
-              </BlurView>
-            </View>
-          </LinearGradient>
-
-          {/* AMOUNT */}
-          <BlurView
-            intensity={20}
-            tint="dark"
-            style={{
-              borderRadius: 30,
-              overflow: "hidden",
-              marginBottom: 28,
-            }}
-          >
-            <View
-              style={{
-                backgroundColor: "rgba(255,255,255,0.03)",
-                padding: 22,
-              }}
-            >
-              <Text
-                style={{
-                  color: "#fff",
-                  fontSize: 19,
-                  fontWeight: "bold",
-                  marginBottom: 20,
-                }}
-              >
-                Enter Amount
-              </Text>
-
-              <LinearGradient
-                colors={["#1f2937", "#111827"]}
-                style={{
-                  borderRadius: 24,
-                  paddingHorizontal: 20,
-                  flexDirection: "row",
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{
-                    color: "#facc15",
-                    fontSize: 36,
-                    fontWeight: "900",
-                    marginRight: 12,
-                  }}
-                >
-                  ₹
-                </Text>
-
-                <TextInput
-                  placeholder="0"
-                  placeholderTextColor="#6b7280"
-                  keyboardType="numeric"
-                  value={amount}
-                  onChangeText={handleAmountChange}
-                  style={{
-                    flex: 1,
-                    color: "#fff",
-                    fontSize: 34,
-                    fontWeight: "900",
-                    height: 85,
-                  }}
-                />
-              </LinearGradient>
-
-              <Text
-                style={{
-                  color: "#9ca3af",
-                  marginTop: 12,
-                  fontSize: 12,
-                }}
-              >
-                Minimum ₹50 • Maximum ₹10,000
-              </Text>
-            </View>
-          </BlurView>
-
-          {/* QUICK */}
-          <View
-            style={{
-              marginBottom: 30,
+              borderRadius: 18,
+              padding: 18,
+              marginBottom: 20,
             }}
           >
             <Text
               style={{
-                color: "#fff",
-                fontSize: 20,
-                fontWeight: "bold",
-                marginBottom: 18,
+                color: "#fff7ed",
+                fontWeight: "700",
+                fontSize: 11,
               }}
             >
-              Quick Select
+              BONUS OFFER 🎁
+            </Text>
+
+            <Text
+              style={{
+                color: "#fff",
+                fontSize: 22,
+                fontWeight: "900",
+                marginTop: 4,
+              }}
+            >
+              Get ₹50 Bonus
+            </Text>
+
+            <Text
+              style={{
+                color: "#ffedd5",
+                marginTop: 5,
+                fontSize: 12,
+                lineHeight: 18,
+              }}
+            >
+              Add ₹100 or more and unlock bonus cash.
+            </Text>
+          </LinearGradient>
+
+          {/* ENTER AMOUNT */}
+          <View
+            style={{
+              backgroundColor: "#fff",
+              borderRadius: 18,
+              padding: 18,
+            }}
+          >
+            <Text
+              style={{
+                color: "#111827",
+                fontSize: 15,
+                fontWeight: "800",
+                marginBottom: 14,
+              }}
+            >
+              Enter Amount
+            </Text>
+
+            <View
+              style={{
+                height: 68,
+                borderRadius: 18,
+                borderWidth: 1.5,
+                borderColor: "#14b8a6",
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 16,
+              }}
+            >
+              <Text
+                style={{
+                  color: "#14b8a6",
+                  fontSize: 28,
+                  fontWeight: "900",
+                  marginRight: 8,
+                }}
+              >
+                ₹
+              </Text>
+
+              <TextInput
+                placeholder="0"
+                placeholderTextColor="#9ca3af"
+                keyboardType="numeric"
+                value={amount}
+                onChangeText={handleAmountChange}
+                style={{
+                  flex: 1,
+                  color: "#111827",
+                  fontSize: 24,
+                  fontWeight: "800",
+                }}
+              />
+            </View>
+
+            <Text
+              style={{
+                color: "#6b7280",
+                marginTop: 10,
+                fontSize: 11,
+              }}
+            >
+              Minimum ₹50 • Maximum ₹10,000
+            </Text>
+          </View>
+
+          {/* QUICK ADD */}
+          <View
+            style={{
+              marginTop: 22,
+            }}
+          >
+            <Text
+              style={{
+                color: "#111827",
+                fontSize: 15,
+                fontWeight: "800",
+                marginBottom: 14,
+              }}
+            >
+              Quick Add
             </Text>
 
             <View
@@ -469,33 +483,188 @@ const AddMoney = () => {
               {quickAmounts.map((item, index) => (
                 <TouchableOpacity
                   key={index}
-                  onPress={() => setAmount(item.toString())}
                   activeOpacity={0.8}
+                  onPress={() => setAmount(item.toString())}
+                  style={{
+                    width: width * 0.28,
+                    backgroundColor: "#fff",
+                    height: 65,
+                    borderRadius: 16,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: 14,
+                    borderWidth: 1,
+                    borderColor: "#e5e7eb",
+                  }}
                 >
-                  <LinearGradient
-                    colors={["#111827", "#1f2937"]}
+                  <Text
                     style={{
-                      width: width * 0.27,
-                      height: 75,
-                      borderRadius: 24,
-                      justifyContent: "center",
-                      alignItems: "center",
-                      marginBottom: 16,
+                      color: "#111827",
+                      fontSize: 18,
+                      fontWeight: "800",
                     }}
                   >
-                    <Text
-                      style={{
-                        color: "#facc15",
-                        fontWeight: "900",
-                        fontSize: 22,
-                      }}
-                    >
-                      ₹{item}
-                    </Text>
-                  </LinearGradient>
+                    ₹{item}
+                  </Text>
                 </TouchableOpacity>
               ))}
             </View>
+          </View>
+
+          {/* PAYMENT METHODS */}
+          {/* PAYMENT METHODS */}
+          <View
+            style={{
+              marginTop: 8,
+            }}
+          >
+            <Text
+              style={{
+                color: "#111827",
+                fontSize: 15,
+                fontWeight: "800",
+                marginBottom: 14,
+              }}
+            >
+              Payment Methods
+            </Text>
+
+            {/* UPI APPS */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginBottom: 20,
+              }}
+            >
+              {[
+                {
+                  name: "GPay",
+                  icon: (
+                    <Ionicons name="logo-google" size={24} color="#4285F4" />
+                  ),
+                },
+
+                {
+                  name: "PhonePe",
+                  icon: (
+                    <MaterialCommunityIcons
+                      name="cellphone"
+                      size={24}
+                      color="#5f259f"
+                    />
+                  ),
+                },
+
+                {
+                  name: "Paytm",
+                  icon: (
+                    <Ionicons name="wallet-outline" size={24} color="#00baf2" />
+                  ),
+                },
+              ].map((item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  activeOpacity={0.8}
+                  style={{
+                    width: width * 0.27,
+                    backgroundColor: "#fff",
+                    paddingVertical: 16,
+                    borderRadius: 16,
+                    alignItems: "center",
+                    borderWidth: 1,
+                    borderColor: "#e5e7eb",
+                  }}
+                >
+                  {item.icon}
+
+                  <Text
+                    style={{
+                      marginTop: 8,
+                      fontSize: 12,
+                      fontWeight: "700",
+                      color: "#111827",
+                    }}
+                  >
+                    {item.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* METHODS */}
+            {[
+              {
+                title: "UPI",
+                subtitle: "PhonePe • GPay • Paytm",
+                icon: (
+                  <MaterialCommunityIcons
+                    name="qrcode-scan"
+                    size={20}
+                    color="#14b8a6"
+                  />
+                ),
+              },
+
+              {
+                title: "Cards",
+                subtitle: "Visa • Mastercard",
+                icon: (
+                  <Ionicons name="card-outline" size={20} color="#14b8a6" />
+                ),
+              },
+            ].map((item, index) => (
+              <View
+                key={index}
+                style={{
+                  backgroundColor: "#fff",
+                  borderRadius: 16,
+                  padding: 14,
+                  flexDirection: "row",
+                  alignItems: "center",
+                  marginBottom: 12,
+                }}
+              >
+                <View
+                  style={{
+                    backgroundColor: "#ecfeff",
+                    padding: 12,
+                    borderRadius: 14,
+                  }}
+                >
+                  {item.icon}
+                </View>
+
+                <View
+                  style={{
+                    marginLeft: 12,
+                    flex: 1,
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#111827",
+                      fontWeight: "800",
+                      fontSize: 14,
+                    }}
+                  >
+                    {item.title}
+                  </Text>
+
+                  <Text
+                    style={{
+                      color: "#6b7280",
+                      marginTop: 2,
+                      fontSize: 11,
+                    }}
+                  >
+                    {item.subtitle}
+                  </Text>
+                </View>
+
+                <Feather name="check-circle" size={18} color="#22c55e" />
+              </View>
+            ))}
           </View>
         </View>
       </ScrollView>
@@ -507,9 +676,11 @@ const AddMoney = () => {
           bottom: 0,
           left: 0,
           right: 0,
-          paddingHorizontal: 20,
-          paddingVertical: 20,
-          backgroundColor: "rgba(3,3,3,0.95)",
+          backgroundColor: "#fff",
+          paddingHorizontal: 16,
+          paddingVertical: 14,
+          borderTopWidth: 1,
+          borderTopColor: "#e5e7eb",
         }}
       >
         <TouchableOpacity
@@ -518,22 +689,22 @@ const AddMoney = () => {
           disabled={loading}
         >
           <LinearGradient
-            colors={["#facc15", "#eab308"]}
+            colors={["#14b8a6", "#0f766e"]}
             style={{
-              height: 68,
-              borderRadius: 24,
+              height: 56,
+              borderRadius: 16,
               alignItems: "center",
               justifyContent: "center",
             }}
           >
             <Text
               style={{
-                color: "#000",
-                fontSize: 20,
-                fontWeight: "900",
+                color: "#fff",
+                fontSize: 16,
+                fontWeight: "800",
               }}
             >
-              {loading ? "Processing..." : `Add ₹${amount || "0"} to Wallet`}
+              {loading ? "Processing..." : `Add Cash ₹${amount || "0"}`}
             </Text>
           </LinearGradient>
         </TouchableOpacity>
