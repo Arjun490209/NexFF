@@ -8,6 +8,8 @@ import {
   StatusBar,
   Dimensions,
 } from "react-native";
+import { setUser } from "../../src/redux/slices/userSlice";
+import { useDispatch } from "react-redux";
 
 import { Ionicons, MaterialCommunityIcons, Feather } from "@expo/vector-icons";
 
@@ -23,6 +25,7 @@ import { API } from "../../src/config/api";
 const { width } = Dimensions.get("window");
 
 const AddMoney = () => {
+  const dispatch = useDispatch();
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -183,6 +186,13 @@ const AddMoney = () => {
             setLoading(false);
 
             if (verifyRes?.data?.success) {
+              dispatch(
+                setUser({
+                  user: verifyRes?.data?.user,
+                  token,
+                }),
+              );
+
               Toast.show({
                 type: "success",
                 text1: "Cash Added 💰",
